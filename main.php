@@ -2,13 +2,7 @@
 
 class InvestmentOptimizer
 {
-    /**
-     * Одномерное ДП (задача о рюкзаке) для акций
-     * 
-     * @param array $stocks Массив акций в формате [[стоимость, прибыль], ...]
-     * @param float $budget Бюджет для инвестиций
-     * @return array [максимальная прибыль, выбранные акции]
-     */
+    
     public function max_profit_1d(array $stocks, float $budget): array
     {
         $n = count($stocks);
@@ -27,7 +21,6 @@ class InvestmentOptimizer
             }
         }
         
-        // Находим максимальную прибыль (не обязательно использовать весь бюджет)
         $maxProfit = max($dp);
         $maxIndex = array_search($maxProfit, $dp);
         $selectedStocks = $selected[$maxIndex];
@@ -35,21 +28,12 @@ class InvestmentOptimizer
         return [$maxProfit, $selectedStocks];
     }
     
-    /**
-     * Двумерное ДП для оптимизации риска и доходности
-     * 
-     * @param array $stocks Массив акций
-     * @param float $bondYield Доходность облигаций (например, 0.05 для 5%)
-     * @param float $totalBudget Общий бюджет
-     * @param float $riskLimit Максимальная доля в акциях (например, 0.5 для 50%)
-     * @return array [прибыль, сумма в акциях, сумма в облигациях]
-     */
+   
     public function max_profit_2d(array $stocks, float $bondYield, float $totalBudget, float $riskLimit): array
     {
         $maxStocksAmount = min($totalBudget, $totalBudget * $riskLimit);
         $n = count($stocks);
         
-        // Инициализация DP таблицы
         $dp = array_fill(0, $n + 1, array_fill(0, (int)$maxStocksAmount + 1, 0));
         $stocksAmount = array_fill(0, $n + 1, array_fill(0, (int)$maxStocksAmount + 1, 0));
         
@@ -58,11 +42,9 @@ class InvestmentOptimizer
             $profit = $stocks[$i-1][1];
             
             for ($j = 0; $j <= $maxStocksAmount; $j++) {
-                // Не берем текущую акцию
                 $dp[$i][$j] = $dp[$i-1][$j];
                 $stocksAmount[$i][$j] = $stocksAmount[$i-1][$j];
                 
-                // Берем текущую акцию, если возможно
                 if ($j >= $cost) {
                     $newProfit = $dp[$i-1][$j - $cost] + $profit;
                     if ($newProfit > $dp[$i][$j]) {
@@ -73,7 +55,6 @@ class InvestmentOptimizer
             }
         }
         
-        // Находим оптимальное распределение
         $maxProfit = 0;
         $optimalStocksAmount = 0;
         
@@ -94,22 +75,12 @@ class InvestmentOptimizer
         return [$maxProfit, $optimalStocksAmount, $optimalBondsAmount];
     }
     
-    /**
-     * Трехмерное ДП с учетом временного горизонта
-     * 
-     * @param array $stocks Массив акций с ожидаемой доходностью за каждый год
-     * @param float $bondYield Доходность облигаций
-     * @param float $totalBudget Общий бюджет
-     * @param float $riskLimit Лимит риска
-     * @param int $years Временной горизонт
-     * @return array [итоговая прибыль, распределение по годам]
-     */
+   
     public function max_profit_3d(array $stocks, float $bondYield, float $totalBudget, float $riskLimit, int $years): array
     {
         $maxStocksAmount = min($totalBudget, $totalBudget * $riskLimit);
         $n = count($stocks);
         
-        // DP: [год][инвестиции в акции][акция]
         $dp = array_fill(0, $years + 1, 
                 array_fill(0, (int)$maxStocksAmount + 1, 
                     array_fill(0, $n + 1, 0)));
@@ -120,12 +91,10 @@ class InvestmentOptimizer
             for ($j = 0; $j <= $maxStocksAmount; $j++) {
                 for ($i = 1; $i <= $n; $i++) {
                     $cost = $stocks[$i-1][0];
-                    $annualProfit = $stocks[$i-1][1] / $years; // Упрощенное предположение
+                    $annualProfit = $stocks[$i-1][1] / $years; 
                     
-                    // Не берем акцию
                     $dp[$year][$j][$i] = $dp[$year][$j][$i-1];
                     
-                    // Берем акцию
                     if ($j >= $cost) {
                         $newProfit = $dp[$year-1][$j - $cost][$i-1] + $annualProfit;
                         if ($newProfit > $dp[$year][$j][$i]) {
@@ -136,7 +105,7 @@ class InvestmentOptimizer
             }
         }
         
-        // Добавляем доходность от облигаций
+
         $maxProfit = 0;
         $optimalStocks = 0;
         
@@ -155,12 +124,9 @@ class InvestmentOptimizer
         return [$maxProfit, $optimalStocks, $totalBudget - $optimalStocks];
     }
     
-    /**
-     * Жадный алгоритм для сравнения (выбор по максимальной доходности)
-     */
+   
     public function greedy_approach(array $stocks, float $budget): array
     {
-        // Сортируем по убыванию доходности (прибыль/стоимость)
         usort($stocks, function($a, $b) {
             $yieldA = $a[1] / $a[0];
             $yieldB = $b[1] / $b[0];
@@ -183,14 +149,10 @@ class InvestmentOptimizer
     }
 }
 
-/**
- * Класс для визуализации результатов
- */
+
 class InvestmentVisualizer
 {
-    /**
-     * Строит график зависимости прибыли от бюджета
-     */
+    
     public static function plotProfitVsBudget(array $stocks, float $maxBudget, int $steps = 20): void
     {
         $optimizer = new InvestmentOptimizer();
@@ -211,7 +173,6 @@ class InvestmentVisualizer
             echo sprintf("%6.0f\t%7.1f\n", $budget, $profit);
         }
         
-        // Текстовая визуализация
         echo "\nТекстовая диаграмма:\n";
         $maxProfit = max($profits);
         
@@ -225,9 +186,7 @@ class InvestmentVisualizer
         }
     }
     
-    /**
-     * Сравнивает алгоритмы ДП и жадный
-     */
+  
     public static function compareAlgorithms(array $stocks, float $budget): void
     {
         $optimizer = new InvestmentOptimizer();
@@ -235,12 +194,10 @@ class InvestmentVisualizer
         echo "\nСравнение алгоритмов:\n";
         echo str_repeat("=", 50) . "\n";
         
-        // Динамическое программирование
         $startTime = microtime(true);
         list($dpProfit, $dpSelected) = $optimizer->max_profit_1d($stocks, $budget);
         $dpTime = microtime(true) - $startTime;
         
-        // Жадный алгоритм
         $startTime = microtime(true);
         list($greedyProfit, $greedySelected) = $optimizer->greedy_approach($stocks, $budget);
         $greedyTime = microtime(true) - $startTime;
@@ -260,30 +217,26 @@ class InvestmentVisualizer
     }
 }
 
-/**
- * Основной скрипт с примером использования
- */
+
 function main()
 {
     echo "СИСТЕМА ФОРМИРОВАНИЯ ИНВЕСТИЦИОННОГО ПОРТФЕЛЯ\n";
     echo str_repeat("=", 60) . "\n\n";
     
-    // Пример данных
     $stocks = [
-        [100, 10],  // [стоимость, прибыль]
+        [100, 10],  
         [200, 30],
         [150, 20],
         [80, 15],
         [120, 25]
     ];
     
-    $bondsYield = 0.05; // 5%
+    $bondsYield = 0.05; 
     $totalBudget = 300;
-    $riskLimit = 0.5; // 50%
+    $riskLimit = 0.5; 
     
     $optimizer = new InvestmentOptimizer();
     
-    // 1. Одномерное ДП
     echo "1. ОДНОМЕРНОЕ ДИНАМИЧЕСКОЕ ПРОГРАММИРОВАНИЕ\n";
     echo str_repeat("-", 50) . "\n";
     
@@ -302,7 +255,6 @@ function main()
     }
     echo "Использовано средств: {$totalCost} из {$totalBudget}\n";
     
-    // 2. Двумерное ДП
     echo "\n2. ДВУМЕРНОЕ ДИНАМИЧЕСКОЕ ПРОГРАММИРОВАНИЕ\n";
     echo str_repeat("-", 50) . "\n";
     
@@ -317,7 +269,6 @@ function main()
     echo "  Облигации: " . number_format($bondsAmount, 2) . " (" . 
         number_format($bondsAmount / $totalBudget * 100, 1) . "%)\n";
     
-    // 3. Трехмерное ДП (с временным горизонтом)
     echo "\n3. ТРЕХМЕРНОЕ ДП С ВРЕМЕННЫМ ГОРИЗОНТОМ (3 года)\n";
     echo str_repeat("-", 50) . "\n";
     
@@ -330,19 +281,16 @@ function main()
     echo "  Акции: " . number_format($stocks3d, 2) . "\n";
     echo "  Облигации: " . number_format($bonds3d, 2) . "\n";
     
-    // 4. Визуализация
     echo "\n4. ВИЗУАЛИЗАЦИЯ\n";
     echo str_repeat("-", 50) . "\n";
     
     InvestmentVisualizer::plotProfitVsBudget($stocks, $totalBudget * 1.5, 10);
     
-    // 5. Сравнение алгоритмов
     echo "\n5. ТЕСТИРОВАНИЕ И СРАВНЕНИЕ\n";
     echo str_repeat("-", 50) . "\n";
     
     InvestmentVisualizer::compareAlgorithms($stocks, $totalBudget);
     
-    // 6. Тестирование на различных наборах данных
     echo "\n6. ТЕСТИРОВАНИЕ НА РАЗЛИЧНЫХ НАБОРАХ\n";
     echo str_repeat("-", 50) . "\n";
     
@@ -365,26 +313,20 @@ function main()
     }
 }
 
-// Запуск основной программы
 main();
 
-/**
- * Дополнительные тесты и примеры
- */
+
 echo "\n\nДОПОЛНИТЕЛЬНЫЕ ПРИМЕРЫ:\n";
 echo str_repeat("=", 60) . "\n";
 
-// Пример из условия задачи
 echo "\nПример из условия задачи:\n";
 $exampleStocks = [[100, 10], [200, 30], [150, 20]];
 $optimizer = new InvestmentOptimizer();
 
-// Одномерное ДП
 list($profit, $selected) = $optimizer->max_profit_1d($exampleStocks, 300);
 echo "Одномерное ДП: прибыль {$profit} (акции " . 
     implode(" и ", array_map(function($x) { return $x + 1; }, $selected)) . ")\n";
 
-// Двумерное ДП
 list($profit2d, $stocksAmount, $bondsAmount) = $optimizer->max_profit_2d(
     $exampleStocks, 0.05, 300, 0.5
 );
